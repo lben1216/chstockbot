@@ -6,7 +6,7 @@ import os
 import getopt
 import sys
 import config
-PORT = int(os.environ.get('PORT', 5000))
+PORT = int(os.environ.get('PORT', 8443))
 
 
 
@@ -46,19 +46,25 @@ if __name__ == '__main__':
     print(f"Starting... ID: {str(CONFIG['ID'])} , Username: {CONFIG['Username']}")
 
     commands = []
-    from cmdproc import echo, groupcmd,rewards,report
+    from cmdproc import echo, groupcmd,rewards,report,error
     commands += echo.add_dispatcher(dispatcher)
     commands += groupcmd.add_dispatcher(dispatcher)
     commands += rewards.add_dispatcher(dispatcher)
     commands += report.add_dispatcher(dispatcher)
+    
+    #handle error log
+    dispatcher.add_error_handler(error)
     # 在这里加入功能
     # from cmdproc import admincmd
     # commands += admincmd.add_dispatcher(dispatcher)
 
     updater.bot.set_my_commands(commands)
     
-    updater.start_webhook(listen="0.0.0.0", port=int(PORT),url_path=CONFIG['Token'])
-    updater.bot.set_webhook('https://telegram-chstockbot.herokuapp.com/' + CONFIG['Token'])
+    updater.start_webhook(
+                        listen="0.0.0.0",
+                        port=int(PORT),
+                        url_path=str(CONFIG['Token']),
+                        webhook_url='https://telegram-chstockbot.herokuapp.com/' + str(CONFIG['Token']))
     #updater.start_polling()
     print('Started...')
     mysystemd.ready()
