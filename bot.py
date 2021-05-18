@@ -6,6 +6,8 @@ import os
 import getopt
 import sys
 import config
+PORT = int(os.environ.get('PORT', 5000))
+
 
 
 def help():
@@ -54,8 +56,10 @@ if __name__ == '__main__':
     # commands += admincmd.add_dispatcher(dispatcher)
 
     updater.bot.set_my_commands(commands)
-
-    updater.start_polling()
+    
+    updater.start_webhook(listen="0.0.0.0", port=int(PORT),url_path=CONFIG['Token'])
+    updater.bot.set_webhook('https://telegram-chstockbot.herokuapp.com/' + CONFIG['Token'])
+    #updater.start_polling()
     print('Started...')
     mysystemd.ready()
 
