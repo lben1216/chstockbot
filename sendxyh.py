@@ -7,12 +7,9 @@ import requests
 import config
 import schedule
 import time
-#defin today's date
+#define today's date
 end = datetime.date.today()
 group_id = -1001430794202
-#symbol = '^spx'
-#df = web.DataReader(symbol.upper(), 'stooq',start=start,end=end)
-#print(df)
 
 #read bot config from JSON file
 config.config_file = os.path.join(config.config_path, "config.json")
@@ -23,7 +20,7 @@ except FileNotFoundError:
     config.set_default()
     sys.exit(2)
 
-#define sending message to telegram group
+#define sending message content and api config to telegram group
 def send_xyh(chat_id, message):
     data = {
         'chat_id': chat_id,
@@ -51,8 +48,9 @@ def cal_avg_price(symbol, week):
 
 
 
-
+#build timer to auto send message
 def scheduler():
+    #get avg price when scheduler task is running
     qqq_13 = cal_avg_price('qqq', 13)
     qqq_50 = cal_avg_price('qqq', 50)
     qqq_200 = cal_avg_price('qqq', 200)
@@ -61,7 +59,7 @@ def scheduler():
     spy_50 = cal_avg_price('spy', 50)
     spy_200 = cal_avg_price('spy', 200)
 
-
+    #generate outgoing message
     message = f"""当日天相
 SPY价格：{spy_13[1]:.2f}({spy_13[2]:.2f}-{spy_13[3]:.2f})
 13周期均价：{spy_13[0]:.2f}
@@ -72,6 +70,8 @@ QQQ价格：{qqq_13[1]:.2f}({qqq_13[2]:.2f}-{qqq_13[3]:.2f})
 13周期均价：{qqq_13[0]:.2f}
 50周期均价：{qqq_50[0]:.2f}
 200周期均价：{qqq_200[0]:.2f}"""
+    
+    #try to send message and catch up exception
     try:
         api_response = send_xyh(group_id, message)
         print(api_response)
@@ -79,6 +79,8 @@ QQQ价格：{qqq_13[1]:.2f}({qqq_13[2]:.2f}-{qqq_13[3]:.2f})
         message = f"""cannot send message to {group_id} due to {e}; please re-try"""
         api_response = send_xyh(group_id, message)
         print(api_response.status_code)
+
+#start sevice continuously        
 if __name__ == '__main__':
     schedule.every().day.at("16:05").do(scheduler)
   
