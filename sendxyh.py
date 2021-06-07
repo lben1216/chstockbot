@@ -1,17 +1,32 @@
+import getopt
 import os
 import sys
 import pandas as pd
 import pandas_datareader.data as web
 import datetime
 import requests
+import telegram
 import config
-import schedule
 import time
+from telegram import bot
 #define today's date
 end = datetime.date.today()
 group_id = -1001430794202
-
+stock_list = [['spy',13,50],['qqq',13,50,200],['^spx',13,50,200]]
 #read bot config from JSON file
+try:
+    opts, args = getopt.getopt(sys.argv[1:], "hc:", ["config="])
+except getopt.GetoptError:
+    print(help())
+    sys.exit(2)
+
+for opt, arg in opts:
+    if opt == '-h':
+        print(help())
+        sys.exit()
+    elif opt in ("-c", "--config"):
+        config.config_path = arg
+
 config.config_file = os.path.join(config.config_path, "config.json")
 try:
     CONFIG = config.load_config()
@@ -31,63 +46,35 @@ def send_xyh(chat_id, message):
     return response
 
 #calculate average close price based on symbol and week
-def cal_avg_price(symbol, week):
-    start = datetime.date.today() - datetime.timedelta(weeks=week)
-    #df = web.DataReader(symbol.upper(), 'stooq', start=start, end=end)
-    df = web.get_data_yahoo(symbol.upper(),start=start,end=end)
-    #print(df)
-    avg_open_price = df['Open'].mean()
-    avg_high_price = df['High'].mean()
-    avg_low_price = df['Low'].mean()
-    avg_close_price = df['Close'].mean()
-    current_close_price = df['Close'][0]
-    current_high_price = df['High'][0]
-    current_low_price = df['Low'][0]
-    print(f"""avg open price: {avg_open_price:.2f}, avg close price: {avg_close_price:.2f}, avg high price: {avg_high_price:.2f},avg low price: {avg_low_price:.2f}""")
-    return [avg_close_price, current_close_price,current_close_price,current_high_price]
-
-
-
-#build timer to auto send message
-def scheduler():
-    #get avg price when scheduler task is running
-    qqq_13 = cal_avg_price('qqq', 13)
-    qqq_50 = cal_avg_price('qqq', 50)
-    qqq_200 = cal_avg_price('qqq', 200)
-
-    spy_13 = cal_avg_price('spy', 13)
-    spy_50 = cal_avg_price('spy', 50)
-    spy_200 = cal_avg_price('spy', 200)
-
-    #generate outgoing message
-    message = f"""当日天相
-SPY价格：{spy_13[1]:.2f}({spy_13[2]:.2f}-{spy_13[3]:.2f})
-13周期均价：{spy_13[0]:.2f}
-50周期均价：{spy_50[0]:.2f}
-
-
-QQQ价格：{qqq_13[1]:.2f}({qqq_13[2]:.2f}-{qqq_13[3]:.2f})
-13周期均价：{qqq_13[0]:.2f}
-50周期均价：{qqq_50[0]:.2f}
-200周期均价：{qqq_200[0]:.2f}"""
-    
-    #try to send message and catch up exception
+def cal_avg_price(symbol, ma=[]):
+    start = datetime.date.today() - datetime.timedelta(days=365)
+    message = ""
     try:
-        api_response = send_xyh(group_id, message)
-        print(api_response)
+        df = web.get_data_yahoo(symbol.upper(),start=start,end=end)
+        #start process data based on args number
+        current_close_price = df['Adj Close'][-1]
+        current_high_price = df['High'][-1]
+        current_low_price = df['Low'][-1]
+        message = f"""
+{symbol}价格：{current_close_price:.2f} ({current_low_price:.2f}-{current_high_price:.2f})"""
+        for ma in ma:
+            ma_price = df['Adj Close'].tail(ma).mean()
+            message += f"""
+{ma}周期均价：{ma_price:.2f}"""
+        message += "\n"
     except Exception as e:
-        message = f"""cannot send message to {group_id} due to {e}; please re-try"""
-        api_response = send_xyh(group_id, message)
-        print(api_response.status_code)
+        message += f"""failed to fetch/calculate data due to {e}"""
+    
+    return message  
 
-#start sevice continuously        
-if __name__ == '__main__':
-    schedule.every().day.at("16:05").do(scheduler)
-  
-# Loop so that the scheduling task
-# keeps on running all time.
-    while True:
-    # Checks whether a scheduled task 
-    # is pending to run or not
-        schedule.run_pending()
-        time.sleep(1)
+#calculate price based on s list and generate message
+out_message = f"""
+当日天相
+"""
+for stock in stock_list:
+    out_message += cal_avg_price(stock[0],stock[1:])
+
+
+#try to send message and catch up exception
+bot = telegram.Bot(token=CONFIG["Token"])
+bot.send_message(chat_id=group_id,text=out_message)
