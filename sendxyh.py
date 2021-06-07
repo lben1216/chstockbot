@@ -69,8 +69,7 @@ def cal_avg_price(symbol, ma=[]):
 
 #calculate price based on s list and generate message
 out_message = f"""
-当日天相
-"""
+当日天相"""
 for stock in stock_list:
     out_message += cal_avg_price(stock[0],stock[1:])
 
