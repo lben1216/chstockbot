@@ -42,8 +42,7 @@ def cal_avg_price(symbol, ma=[]):
     start = datetime.date.today() - datetime.timedelta(days=365)
     message = ""
     try:
-        df = web.DataReader(symbol.upper(),'yahoo',start=start,end=end)
-        print(df)
+        df = web.DataReader(symbol.upper(),'stooq',start=start,end=end)
     except Exception as e:
         raise Exception(f"""Error occured while pulling data due to {e}""")
         #start process data based on args number
@@ -69,15 +68,13 @@ out_message = f"""
 
 bot = telegram.Bot(token=CONFIG["Token"])
 for stock in stock_list:
-    stock_message = cal_avg_price(stock[0],stock[1:])
-    if Exception or DataError:
-        bot.send_message(chat_id=admingroup,text="cannot fetch data from data source, please check")
-    else:
-        out_message += stock_message
+    try:
+        out_message += cal_avg_price(stock[0],stock[1:])
+    except Exception or DataError as e:
+        bot.send_message(chat_id=admingroup,text=f"""cannot fetch data {stock[0]} from data source due to {e}, please check""")
 
 
 #try to send message and catch up exception
-
 bot.send_message(chat_id=group_id,text=out_message)
 
 #crontab command
