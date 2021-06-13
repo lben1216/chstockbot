@@ -42,7 +42,7 @@ def cal_avg_price(symbol, ma=[]):
     start = datetime.date.today() - datetime.timedelta(days=365)
     message = ""
     try:
-        df = web.DataReader(symbol.upper(),'stooq',start=start,end=end)
+        df = web.DataReader(symbol.upper(),'yahoo',start=start,end=end)
     except Exception as e:
         raise Exception(f"""Error occured while pulling data due to {e}""")
         #start process data based on args number
@@ -62,20 +62,23 @@ def cal_avg_price(symbol, ma=[]):
     
     return message  
 
-#calculate price based on s list and generate message
-out_message = f"""
-当日天相"""
 
-bot = telegram.Bot(token=CONFIG["Token"])
-for stock in stock_list:
-    try:
-        out_message += cal_avg_price(stock[0],stock[1:])
-    except Exception or DataError as e:
-        bot.send_message(chat_id=admingroup,text=f"""cannot fetch data {stock[0]} from data source due to {e}, please check""")
+if __name__ == '__main__':
+    #calculate price based on s list and generate message
 
 
-#try to send message and catch up exception
-bot.send_message(chat_id=group_id,text=out_message)
+    bot = telegram.Bot(token=CONFIG["Token"])
+    for stock in stock_list:
+        try:
+            out_message = f"""
+    当日天相"""
+            out_message += cal_avg_price(stock[0],stock[1:])
+        except Exception or DataError as e:
+            bot.send_message(chat_id=admingroup,text=f"""cannot fetch data {stock[0]} from data source due to {e}, please check""")
 
-#crontab command
-#05 16 * * 1-5 python /xx/xx/xx/Github/chstockbot/sendxyh.py
+
+    #try to send message and catch up exception
+    bot.send_message(chat_id=group_id,text=out_message)
+
+    #crontab command
+    #05 16 * * 1-5 python /xx/xx/xx/Github/chstockbot/sendxyh.py
