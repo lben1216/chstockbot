@@ -37,16 +37,6 @@ except FileNotFoundError:
     config.set_default()
     sys.exit(2)
 
-#define sending message content and api config to telegram group
-def send_xyh(chat_id, message):
-    data = {
-        'chat_id': chat_id,
-        'text': message
-    }
-    url = "https://api.telegram.org/bot{api}/sendMessage".format(api=CONFIG['Token'])
-    response = requests.get(url,params=data)
-    return response
-
 #calculate average close price based on symbol and week
 def cal_avg_price(symbol, ma=[]):
     start = datetime.date.today() - datetime.timedelta(days=365)
