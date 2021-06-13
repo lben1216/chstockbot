@@ -46,7 +46,7 @@ def cal_avg_price(symbol, ma=[]):
     except Exception as e:
         raise Exception(f"""Error occured while pulling data due to {e}""")
         #start process data based on args number
-    if df:
+    if not df.empty:
         current_close_price = df['Adj Close'][-1]
         current_high_price = df['High'][-1]
         current_low_price = df['Low'][-1]
