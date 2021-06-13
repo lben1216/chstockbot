@@ -42,7 +42,8 @@ def cal_avg_price(symbol, ma=[]):
     start = datetime.date.today() - datetime.timedelta(days=365)
     message = ""
     try:
-        df = web.get_data_yahoo(symbol.upper(),start=start,end=end)
+        df = web.DataReader(symbol.upper(),'yahoo',start=start,end=end)
+        print(df)
     except Exception as e:
         raise Exception(f"""Error occured while pulling data due to {e}""")
         #start process data based on args number
@@ -52,8 +53,8 @@ def cal_avg_price(symbol, ma=[]):
         current_low_price = df['Low'][-1]
         message = f"""
     {symbol}价格：{current_close_price:.2f} ({current_low_price:.2f}-{current_high_price:.2f})"""
-        for ma in ma:
-            ma_price = df['Adj Close'].tail(ma).mean()
+        for i in ma:
+            ma_price = df['Adj Close'].tail(i).mean()
             message += f"""
     {ma}周期均价：{ma_price:.2f}"""
         message += "\n"
