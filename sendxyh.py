@@ -2,6 +2,7 @@ import getopt
 import os
 import sys
 import pandas as pd
+from pandas.core.base import DataError
 import pandas_datareader.data as web
 import datetime
 import requests
@@ -12,6 +13,7 @@ from telegram import bot
 #define today's date
 end = datetime.date.today()
 group_id = -1001430794202
+admingroup = -1001430794202
 stock_list = [['spy',13,50],['qqq',13,50,200],['^spx',13,50,200]]
 #read bot config from JSON file
 try:
@@ -51,29 +53,41 @@ def cal_avg_price(symbol, ma=[]):
     message = ""
     try:
         df = web.get_data_yahoo(symbol.upper(),start=start,end=end)
+    except Exception as e:
+        raise Exception(f"""Error occured while pulling data due to {e}""")
         #start process data based on args number
+    if df:
         current_close_price = df['Adj Close'][-1]
         current_high_price = df['High'][-1]
         current_low_price = df['Low'][-1]
         message = f"""
-{symbol}价格：{current_close_price:.2f} ({current_low_price:.2f}-{current_high_price:.2f})"""
+    {symbol}价格：{current_close_price:.2f} ({current_low_price:.2f}-{current_high_price:.2f})"""
         for ma in ma:
             ma_price = df['Adj Close'].tail(ma).mean()
             message += f"""
-{ma}周期均价：{ma_price:.2f}"""
+    {ma}周期均价：{ma_price:.2f}"""
         message += "\n"
-    except Exception as e:
-        message += f"""failed to fetch/calculate data due to {e}"""
+    else:
+        raise DataError
     
     return message  
 
 #calculate price based on s list and generate message
 out_message = f"""
 当日天相"""
+
+bot = telegram.Bot(token=CONFIG["Token"])
 for stock in stock_list:
-    out_message += cal_avg_price(stock[0],stock[1:])
+    stock_message = cal_avg_price(stock[0],stock[1:])
+    if Exception or DataError:
+        bot.send_message(chat_id=admingroup,text="cannot fetch data from data source, please check")
+    else:
+        out_message += stock_message
 
 
 #try to send message and catch up exception
-bot = telegram.Bot(token=CONFIG["Token"])
+
 bot.send_message(chat_id=group_id,text=out_message)
+
+#crontab command
+#05 16 * * 1-5 python /xx/xx/xx/Github/chstockbot/sendxyh.py
