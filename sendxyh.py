@@ -31,7 +31,7 @@ def get_spx_ndx_avg_msg(ma=50,end=datetime.date.today()):
                     down.append(symbol)
             except stooq.markCloseError:
                 err_msg += f"{key}: {symbol} {end.strftime('%Y-%m-%d')}没有数据，请确保输入的日期当天有开市\n"
-                break
+                #break
             except Exception as e:
                 err_msg += f"unreachable stock: {symbol}\nerror message: {e}\n"
         if down:
@@ -135,7 +135,7 @@ if __name__ == '__main__':
         if err:
             admin_message += err
         if notify_message:
-            notify_message = f"🌈🌈🌈{datetime.date.today().strftime('%Y/%m/%d')}天相🌈🌈🌈: \n{notify_message}\n{msg}\n贡献者:毛票教的大朋友们"
+            notify_message = f"🌈🌈🌈{d.strftime('%Y/%m/%d')}天相🌈🌈🌈: \n{notify_message}\n{msg}\n贡献者:毛票教的大朋友们"
             sendmsg(bot,notifychat,notify_message,debug)
         if admin_message:
             sendmsg(bot,adminchat,admin_message,debug)
