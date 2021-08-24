@@ -17,16 +17,18 @@ class Index:
     down = []
     t_volume = ""
     y_volume = ""
+    t = ""
+    y = ""
     index_msg = {}
     ma = 0
+    err_msg = ""
 
     
-    def __init__(self,symbol, ma) -> None:
+    def __init__(self,symbol) -> None:
         symbol = symbol.upper()
         if symbol not in self.sources.keys():
             raise IndexError(f"{symbol} 不在我们的支持列表中")
         self.symbol = symbol
-        self.ma = ma
 
     def get_index_tickers_list(self):
         """
@@ -38,7 +40,7 @@ class Index:
         self.tickers = df[colum_name].tolist()
         return self.tickers
 
-    def compare_avg(self, source="~/Downloads/data", start_date =datetime.date(2021,1,1),end_date=datetime.date.today()):
+    def compare_avg(self, ma, source="~/Downloads/data", start_date =datetime.date(2021,1,1),end_date=datetime.date.today()):
         """
         比较指数中所有股票最新价格和某个周期价格（默认50），输出股票总数、高于MA的数量以及占比。
         统计并输出这些股票今天和昨日的交易量总和，并做比较
@@ -49,24 +51,27 @@ class Index:
         self.down = []
         self.t_volume = 0
         self.y_volume = 0
-        err_msg =""
+        self.err_msg =""
+        self.ma = ma
         for symbol in self.tickers:
             try:
                 symbol = Ticker(symbol,start_date = start_date, end_date= end_date)
                 df = symbol.load_data(source)
                 lastest_price = df['Adj Close'][-1]
+                self.t = df.index.date[-1]
                 self.t_volume += df['Volume'][-1]
+                self.y = df.index.date[-2]
                 self.y_volume += df['Volume'][-2]                
-                symbol.append_sma(self.ma)
-                if df.count()[0] > self.ma :
-                    if lastest_price < symbol.smas[self.ma]:
+                symbol.append_sma(ma)
+                if df.count()[0] > ma :
+                    if lastest_price < symbol.smas[ma]:
                         self.up.append(symbol.symbol)
                     else:
                         self.down.append(symbol.symbol)
                 else:
-                    err_msg +=f"{symbol.symbol.upper()} 的{self.ma}周期均价因时长不足无法比较\n" 
+                    self.err_msg +=f"{symbol.symbol.upper()} 的{ma}周期均价因时长不足无法比较\n" 
             except Exception as e:
-                    err_msg += f"unreachable stock: {symbol.symbol.upper()}\nerror message: {e}\n"
+                    self.err_msg += f"unreachable stock: {symbol.symbol.upper()}\nerror message: {e}\n"
         return True
 
     def ge_index_compare_msg(self,index, end_date):
@@ -75,10 +80,10 @@ class Index:
         self.index_msg = {}
         up_num = len(self.up)
         down_num = len(self.down)
-        volume_change = (self.t_volume/self.y_volume -1)*100
+        volume_change = self.t_volume/self.y_volume-1
         if down_num > 0:           
-            self.index_msg = f"{self.symbol.upper()}共有{up_num+down_num}支股票，共有{up_num/(up_num+down_num)*100:.2f}%高于50周期均线. 今日总成交量为{self.t_volume},昨日总成交量为{self.y_volume},今日增长了{volume_change*100:.2f}%."
-            #self.index_msg = f"{self.symbol.upper()}共有{up_num+down_num}支股票，共有{up_num/(up_num+down_num)*100:.2f}%高于{self.ma}周期均线."
+            self.index_msg = f"{self.symbol.upper()} 共有 {up_num+down_num} 支股票，共有 {up_num/(up_num+down_num)*100:.2f}% 高于 {self.ma} 周期均线.\n{self.t} 总成交量为 {format(self.t_volume, '0,.2f')},\n{self.y} 总成交量为 {format(self.y_volume, '0,.2f')},\n今日增长了 {volume_change*100:.2f}%.\n"
+            
         else:
             raise IndexError (f"数据好像出问题了，请检查一下。")
         if up_num+down_num + 20 < len(self.tickers):
