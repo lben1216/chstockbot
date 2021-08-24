@@ -86,4 +86,4 @@ if __name__ == '__main__':
         except Exception as err:
             sendmsg(bot,adminchat,f"今天完蛋了，什么都不知道，快去通知管理员，bot已经废物了，出的问题是:\n{type(err)}:\n{err}",debug)
     else:
-        sendmsg(bot,adminchat,f"好像出问题了:\n取到的数据中最后一天是{data_date}，而今天是{target_date}",debug)
+        sendmsg(bot,adminchat,f"出问题啦:\n取到的数据中最后一天是{data_date}，而今天是{target_date}",debug)
