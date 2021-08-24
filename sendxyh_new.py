@@ -54,7 +54,8 @@ if __name__ == '__main__':
     notify_message = ""
     admin_message = ""
     index_message = ""
-    data_date = None
+    index_end_date = None
+    symbol_end_date = None
 
     for index in indexs:
         try:
@@ -62,7 +63,7 @@ if __name__ == '__main__':
             s.get_index_tickers_list()              
             s.compare_avg(ma = 50,source = "~/Downloads/data", start_date = start_date, end_date=target_date)
             s.ge_index_compare_msg(index, end_date=datetime.date(2021,7,21))  
-            data_date = s.t          
+            index_end_date = s.t          
             index_message += f"{s.index_msg}\n"
             admin_message += f"{s.err_msg}"
         except IndexError as e:
@@ -72,11 +73,12 @@ if __name__ == '__main__':
         try:               
             ticker = Ticker(symbol[0], start_date = start_date, end_date=target_date)
             ticker.load_data('stooq')
+            symbol_end_date = ticker.end_date
             ticker.ge_xyh_msg(symbol[1:])
             notify_message += f"{ticker.xyh_msg}"
         except TickerError as e:
             admin_message += str(e)
-    if data_date == target_date:    
+    if index_end_date == target_date and symbol_end_date == target_date:    
         try:
             if admin_message:
                 sendmsg(bot,adminchat,admin_message,debug=debug)
@@ -86,4 +88,4 @@ if __name__ == '__main__':
         except Exception as err:
             sendmsg(bot,adminchat,f"今天完蛋了，什么都不知道，快去通知管理员，bot已经废物了，出的问题是:\n{type(err)}:\n{err}",debug)
     else:
-        sendmsg(bot,adminchat,f"出问题啦:\n取到的数据中最后一天是{data_date}，而今天是{target_date}",debug)
+        sendmsg(bot,adminchat,f"出问题啦:\n有关指数部分的数据中最后一天是{index_end_date}，有关股票部分的数据中最后一天是{symbol_end_date}, 今天是{target_date}",debug)
