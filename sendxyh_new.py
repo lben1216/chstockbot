@@ -54,13 +54,6 @@ if __name__ == '__main__':
     notify_message = ""
     admin_message = ""
     index_message = ""
-    ticker_message = ""
-
-    for ticker in tickers:
-            t = Ticker(ticker)
-            t.load_data('stooq')
-            t.compare_volume_msg()
-            ticker_message += f"{t.volume_msg}\n"
 
     for index in indexs:
         try:
@@ -69,7 +62,7 @@ if __name__ == '__main__':
             s.compare_avg(ma = 50,source = "~/Downloads/data", start_date = start_date, end_date=target_date)
             s.ge_index_compare_msg(index, end_date=datetime.date(2021,7,21))            
             index_message += f"{s.index_msg}\n"
-            admin_message += f"{s.compare_msg['err']}"
+            admin_message += f"{s.err_msg}"
         except IndexError as e:
             admin_message += str(e)
 
@@ -85,7 +78,7 @@ if __name__ == '__main__':
         if admin_message:
             sendmsg(bot,adminchat,admin_message,debug=debug)
         if notify_message:
-            notify_message = f"🌈🌈🌈{target_date}天相🌈🌈🌈: \n\n{notify_message}\n{ticker_message}\n{index_message}\n贡献者:毛票教的大朋友们"
+            notify_message = f"🌈🌈🌈{target_date}天相🌈🌈🌈: \n\n{notify_message}\n{index_message}\n贡献者:毛票教的大朋友们"
             sendmsg(bot,notifychat,notify_message,debug=debug)
     except Exception as err:
         sendmsg(bot,adminchat,f"今天完蛋了，什么都不知道，快去通知管理员，bot已经废物了，出的问题是:\n{type(err)}:\n{err}",debug)
