@@ -31,11 +31,11 @@ class Ticker:
         self.symbol = symbol
         self.start_date = start_date
         self.end_date = end_date
-        self.date_lists = get_date_list(start_date, end_date)
 
     def load_data(self,source):
         """
         从本地或某特定路径或stooq取得ticker的数据。
+        根据取得的数据中的起止日期 和 init的起止日期做比较，然后确定start date 和 end date
         """
         symbol = self.symbol
         self.data = None
@@ -59,16 +59,6 @@ class Ticker:
         
         return self.data
 
-    def compare_volume_msg(self):
-        self.volume_msg = ""
-        if self.data is None:
-            self.load_data()
-        df = self.data
-        volume_t = df['Volume'][-1]
-        volume_y = df['Volume'][-2]
-        self.volume_msg = f"{self.symbol.upper()} {self.end_date - datetime.timedelta(days=1)}交易量为 {volume_y}, {self.end_date}交易量为 {volume_t}, 增长 {(volume_t/volume_y-1)*100:.2f}%"
-
-        return self.volume_msg
 
     def get_price_list(self, date_list_name, get_maxtry =get_default_maxtry): 
         """
@@ -118,6 +108,10 @@ class Ticker:
         return {'rate': f"{rate:.2f}%", 'cost':f"{cost:.2f}", 'value':f"{cur_value:.2f}"}
     
     def ge_profit_msg(self):
+        """
+        分别取得xmm和dmm的利润数据情况。
+        生成输出的消息。
+        """
         self.profit_msg = {}
         if self.data is None:
             self.load_data()
