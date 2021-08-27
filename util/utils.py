@@ -44,10 +44,13 @@ def sendmsg(bot,chatid,msg,debug=True):
 def get_week_num(year:int, month:int, day:int) -> int:
     """
     获取当前日期是本月的第几周
+    并且若本月的第二个周三所在周不是第二周，则将这周设为本月第二周
     """
     start = int(datetime.date(year, month, 1).strftime("%W"))
     end = int(datetime.date(year, month,day).strftime("%W"))
     week_num = end - start + 1
+    if week_num < 4 and day < 15:
+        week_num = week_num -1
     return week_num
 
 def get_default_maxtry(try_date):
