@@ -1,34 +1,27 @@
 import datetime
-from stockutil.ticker import Ticker
+import pandas_datareader.data as web
 import pandas as pd
+from stockutil.ticker import Ticker
+
 class IndexError(Exception):
     pass
 
 class Index:
-    #指数代码
     symbol = None
-    #均线周期
-    ma=None
-    #指数成分股列表
     tickers = []
-    #本地数据存储路径   
-    local_store = ""
-    # 下载指数成分股的数据源
     sources = {
         "NDX" : ["https://en.wikipedia.org/wiki/Nasdaq-100",3,"Ticker"],
         "SPX" : ["https://en.wikipedia.org/wiki/List_of_S%26P_500_companies",0,"Symbol"]
     }
-    
-    def __init__(self,symbol,local_store="~/Downloads/data") -> None:
-        up = []
-        down = []
-        t_volume = ""
-        y_volume = ""
-        t = ""
-        y = ""
-        index_msg = {}
-        ma = 0
-        err_msg = ""
+    up = []
+    down = []
+    t_volume = ""
+    y_volume = ""
+    t = ""
+    y = ""
+    index_msg = {}
+    ma = 0
+    err_msg = ""
 
     
     def __init__(self,symbol) -> None:
@@ -36,7 +29,6 @@ class Index:
         if symbol not in self.sources.keys():
             raise IndexError(f"{symbol} 不在我们的支持列表中")
         self.symbol = symbol
-        # self.local_store = local_store
 
     def get_index_tickers_list(self):
         """

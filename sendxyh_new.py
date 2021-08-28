@@ -1,10 +1,11 @@
 import getopt,sys,config,os
+from pandas.core.indexing import IndexSlice
 import datetime
 from telegram import Bot
-from stockutil import stooq, wikipedia
 from stockutil.ticker import Ticker, TickerError
-from util.utils import sendmsg
 from stockutil.index import Index, IndexError
+from util.utils import sendmsg
+
 target_date = datetime.date.today()
 start_date = datetime.date(2021,1,1)
 
@@ -41,15 +42,14 @@ if __name__ == '__main__':
         config.set_default()
         sys.exit(2)
 
-    ENV = config.ENV
+    bot = Bot(token = CONFIG['Token'])
+    symbols = CONFIG['xyhticker']
+    indexs = CONFIG['xyhindex']
+    notifychat = CONFIG['xyhchat']
+    adminchat = CONFIG['xyhlog']
+    debug = CONFIG['DEBUG']
+    tickers = CONFIG['mmtticker']
 
-    bot = Bot(token = ENV.BOT_TOKEN)
-    symbols = ENV.XYHTICKER
-    notifychat = ENV.XYHCHAT
-    adminchat = ENV.XYHLOG
-    debug = ENV.DEBUG
-    ds = ENV.XYHSOURCE
-    xyhindex = ENV.XYHINDEX
 
     notify_message = ""
     admin_message = ""
@@ -57,7 +57,7 @@ if __name__ == '__main__':
     index_end_date = None
     symbol_end_date = None
 
-    for index in xyhindex:
+    for index in indexs:
         try:
             s = Index(index)
             s.get_index_tickers_list()              
@@ -88,4 +88,4 @@ if __name__ == '__main__':
         except Exception as err:
             sendmsg(bot,adminchat,f"今天完蛋了，什么都不知道，快去通知管理员，bot已经废物了，出的问题是:\n{type(err)}:\n{err}",debug)
     else:
-        sendmsg(bot,adminchat,f"出问题啦:\n有关指数部分的数据中最后一天是{index_end_date}，有关股票部分的数据中最后一天是{symbol_end_date}, 今天是{target_date}",debug)
+        sendmsg(bot,adminchat,f"出问题啦:\n有关指数部分的数据中最后一天是{index_end_date}，有关股票部分的数据中最后一天是{symbol_end_date}, 今天是{target_date}.",debug)
