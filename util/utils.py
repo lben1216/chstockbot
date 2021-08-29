@@ -49,8 +49,11 @@ def get_week_num(year:int, month:int, day:int) -> int:
     start = int(datetime.date(year, month, 1).strftime("%W"))
     end = int(datetime.date(year, month,day).strftime("%W"))
     week_num = end - start + 1
-    if week_num < 4 and day < 15:
-        week_num = week_num -1
+    if week_num == 2:
+        if 7 < day < 15:
+            week_num = week_num
+        if day < 8:
+            week_num = week_num -1
     return week_num
 
 def get_default_maxtry(try_date):
