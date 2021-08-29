@@ -1,16 +1,39 @@
 import getopt,sys,config,os
 from pandas.core.indexing import IndexSlice
+import pandas as pd
 import datetime
 from telegram import Bot
 from stockutil.ticker import Ticker, TickerError
 from stockutil.index import Index, IndexError
+from stockutil.stooq import read_stooq_file
 from util.utils import sendmsg
+from pathlib import Path
 
 target_date = datetime.date.today()
 start_date = datetime.date(2021,1,1)
 
 def help():
     return "sendxyh.py -c configpath -d yyyymmdd"
+
+def get_market_volume(self, path = "~/Download/data"):
+    p = Path(path)
+    today_volume = []
+    yesterday_volume = []
+    ticker_name = []
+    for file_name in p.rglob('*.txt'):
+        t = Path (file_name)
+        ticker_file = read_stooq_file(file_name)
+        ticker_name.append(t.stem())
+        today_volume.append(ticker_file['Volume'][-1])
+        yesterday_volume.append(ticker_file['Volume'][-2])
+    
+    market_volume = pd.DataFrame(
+        {'Name':ticker_name,
+        'Today':today_volume,
+        'Yesterday':yesterday_volume}
+    )
+
+    return market_volume
 
 if __name__ == '__main__':
     try:
