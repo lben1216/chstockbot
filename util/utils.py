@@ -49,7 +49,7 @@ def get_week_num(year:int, month:int, day:int) -> int:
     start = int(datetime.date(year, month, 1).strftime("%W"))
     end = int(datetime.date(year, month,day).strftime("%W"))
     week_num = end - start + 1
-    if week_num == 2:
+    if week_num == 2: # 这里的2 感觉可以改造成变量num，函数多一个参数num。 未来无论第几周 只要改输入的参数即可。 不知道是否有必要。
         if 7 < day < 15:
             week_num = week_num
         if day < 8:
