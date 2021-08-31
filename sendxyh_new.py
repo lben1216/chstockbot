@@ -17,29 +17,32 @@ start_date = datetime.date(2021,1,1)
 def help():
     return "sendxyh.py -c configpath -d yyyymmdd"
 
-def get_market_volume(self, path = "~/Download/data"):
+def get_market_volume(path = "~/Download/data"):
     p = Path(path)
+    t_list = []
+    ticker_name = []
     today_volume = []
     yesterday_volume = []
-    ticker_name = []
     err_msg = ""
-    try:
-        for file_name in p.rglob('*.txt'):
+    
+    for file_name in p.rglob('*.txt'):
+        try:
             t = Path (file_name)
-            ticker_file = read_stooq_file(file_name)
-            ticker_name.append(t.stem())
+            t_list.append(t)
+            ticker_name.append(t.stem)
+            # print(ticker_name)
+            ticker_file = read_stooq_file(file_name)            
             today_volume.append(ticker_file['Volume'][-1])
+            # print (today_volume)
             yesterday_volume.append(ticker_file['Volume'][-2])
-    except Exception as e:
-        err_msg += type(e), e
-        
-    market_volume = pd.DataFrame(
-        {'Name':ticker_name,
-        'Today':today_volume,
-        'Yesterday':yesterday_volume}
-    )
+        except Exception as e:
+            err_msg += f"{type(e)},{e}\n"
+            continue
 
-    return market_volume
+    market_volume = {'file num':len(t_list),'name num':len(ticker_name),'today num':len(today_volume),'today volume':sum(today_volume), 'yesterday num':len(yesterday_volume),'yesterday volume':sum(yesterday_volume)}
+
+    return market_volume,err_msg
+
 
 if __name__ == '__main__':
     try:
@@ -85,6 +88,8 @@ if __name__ == '__main__':
     index_message = ""
     index_end_date = None
     symbol_end_date = None
+    volume_message = ""
+    volume_err_message = ""
 
     for index in indexs:
         try:
@@ -107,12 +112,23 @@ if __name__ == '__main__':
             notify_message += f"{ticker.xyh_msg}"
         except TickerError as e:
             admin_message += str(e)
+
+    try:
+        m,e = get_market_volume(path = "/Users/stephen/Download/data")
+        today_v = m['today volume']
+        yestoday_v = m['yesterday volume']
+        change_rate = f"{(today_v/yestoday_v - 1)*100:.2f}%"
+        volume_message = f"今日市场总成交量为{format(today_v, '0,.2f')},昨日为{format(yestoday_v, '0,.2f')},增长了{change_rate}." 
+        admin_message += f"{e}"
+    except Exception as err:
+        admin_message += str(err)
+
     if index_end_date == target_date and symbol_end_date == target_date:    
         try:
             if admin_message:
                 sendmsg(bot,adminchat,admin_message,debug=debug)
             if notify_message:
-                notify_message = f"🌈🌈🌈{target_date}天相🌈🌈🌈: \n\n{notify_message}\n{index_message}\n贡献者:毛票教的大朋友们"
+                notify_message = f"🌈🌈🌈{target_date}天相🌈🌈🌈: \n\n{notify_message}\n{index_message}\n\n{volume_message}\n贡献者:毛票教的大朋友们"
                 sendmsg(bot,notifychat,notify_message,debug=debug)
         except Exception as err:
             sendmsg(bot,adminchat,f"今天完蛋了，什么都不知道，快去通知管理员，bot已经废物了，出的问题是:\n{type(err)}:\n{err}",debug)
