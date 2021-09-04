@@ -82,13 +82,14 @@ class Index:
                 df = symbol.load_data()
                 if end_date in df.index.date:                
                     df = df.loc[df.index[0]:end_date]
-                    symbol.cal_symbols_avg(ma)
-                    symbol.cal_sams_change_rate
-                    for key,value in symbol.smas_state.items(): #从ticke的smas_state读取数据
-                        if value[0] > 0:
-                            self.up.append(symbol.symbol)
-                        else:
-                            self.down.append(symbol.symbol)
+                    if self.from_s == "sources":
+                        symbol.cal_symbols_avg(ma)
+                        symbol.cal_sams_change_rate
+                        for key,value in symbol.smas_state.items(): #从ticke的smas_state读取数据
+                            if value[0] > 0:
+                                self.up.append(symbol.symbol)
+                            else:
+                                self.down.append(symbol.symbol)
                     self.today_vol += df["Volume"][-1] #今日交易量
                     self.yesterday_vol += df["Volume"][-2] #昨日交易量
             except Exception as e:
@@ -108,9 +109,9 @@ class Index:
         end_time = self.endtime
         # TODO: 这个end_time参数如果和compare_avg_ma的不一样，是不是会出很神奇的结果？
         max_num = 20 if self.from_s == "sources" else 150
-        if (len(self.up)+len(self.down) + max_num ) < len(self.tickers):
+        if (len(self.up)+len(self.down) + max_num ) < len(self.tickers) and self.from_s == "sources":
             raise IndexError(f"{self.symbol}: {end_time.strftime('%Y-%m-%d')} 有超过20支股票没有数据，请确保输入的日期当天有开市\n" )      
-        if self.up == 0 or self.down == 0:
+        if self.from_s == "sources" and (self.up == 0 or self.down == 0):
             raise IndexError(f"{self.symbol}无法读取高于/低于周期均价的股票列表，请确认股票列表\n")
         if self.today_vol == 0 and self.yesterday_vol == 0:
             raise IndexError(f"{self.symbol}无法读取今日和昨日的交易量， 请重新计算\n") 
